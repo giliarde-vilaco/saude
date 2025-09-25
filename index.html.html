@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saúde+</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3b82f6; /* blue-500 */
+            --primary-hover: #2563eb; /* blue-600 */
+            --background-color: #f1f5f9; /* slate-100 */
+            --card-background: #ffffff;
+            --text-primary: #1e293b; /* slate-800 */
+            --text-secondary: #475569; /* slate-600 */
+            --border-color: #e2e8f0; /* slate-200 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+        .form-input, .form-select, .form-textarea {
+            @apply w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow text-base;
+        }
+        .form-label {
+            @apply block mb-2 text-sm font-medium text-slate-700;
+        }
+        .btn {
+            @apply w-full font-semibold py-3 px-5 rounded-lg shadow-sm transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 flex items-center justify-center;
+        }
+        .btn-primary {
+            @apply bg-primary-color text-white hover:bg-primary-hover;
+        }
+        .btn-secondary {
+            @apply bg-slate-200 text-slate-800 hover:bg-slate-300;
+        }
+        .card {
+            @apply bg-card-background rounded-2xl shadow-lg p-6 w-full flex flex-col;
+        }
+        .menu-card {
+            @apply flex flex-col items-center justify-center p-4 bg-white rounded-2xl shadow-md text-center hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 ease-in-out;
+            border: 1px solid var(--border-color);
+        }
+        .menu-card svg {
+            @apply h-10 w-10 mb-3 transition-transform duration-300;
+        }
+        .menu-card:hover svg {
+            transform: scale(1.1);
+        }
+        .menu-card span {
+            @apply font-semibold text-sm text-slate-700;
+        }
+        /* Chat styling */
+        .chat-bubble {
+            @apply px-4 py-2 rounded-lg max-w-xs lg:max-w-md;
+        }
+        .chat-bubble-user {
+            @apply bg-primary-color text-white self-end rounded-br-none;
+        }
+        .chat-bubble-ai {
+            @apply bg-slate-200 text-slate-800 self-start rounded-bl-none;
+        }
+        /* Achievement styling */
+        .achievement-card {
+            @apply border-2 p-4 rounded-lg flex flex-col items-center justify-center text-center transition-all;
+        }
+        .achievement-card.locked {
+            @apply border-dashed border-slate-300 bg-slate-50 text-slate-400;
+        }
+        .achievement-card.unlocked {
+            @apply border-amber-400 bg-amber-50 text-amber-600;
+        }
+        .achievement-card svg {
+            @apply h-12 w-12 mb-2;
+        }
+        .achievement-card h3 {
+            @apply font-bold text-sm;
+        }
+        .achievement-card p {
+            @apply text-xs;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+         @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        /* Icon Colors */
+        .icon-meds { color: #3b82f6; } /* blue-500 */
+        .icon-habits { color: #16a34a; } /* green-600 */
+        .icon-vitals { color: #9333ea; } /* purple-600 */
+        .icon-nutrition { color: #ea580c; } /* orange-600 */
+        .icon-appointments { color: #4f46e5; } /* indigo-600 */
+        .icon-sleep { color: #475569; } /* slate-600 */
+        .icon-emotional { color: #db2777; } /* pink-600 */
+        .icon-professionals { color: #e11d48; } /* rose-600 */
+        .icon-achievements { color: #f59e0b; } /* amber-500 */
+        .icon-reports { color: #0d9488; } /* teal-600 */
+        .icon-summary { color: #0891b2; } /* cyan-600 */
+        .icon-news { color: #65a30d; } /* lime-600 */
+        .icon-feedback { color: #c026d3; } /* fuchsia-600 */
+        .icon-profile { color: #64748b; } /* slate-500 */
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Splash Screen (Visible by default) -->
+    <main id="splash-screen" class="flex flex-col flex-grow items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-teal-50">
+        <div class="text-center">
+            <div class="inline-block p-4 bg-white rounded-full shadow-lg">
+                <svg class="h-20 w-20 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+            </div>
+            <h1 class="text-5xl font-bold text-slate-800 mt-6">Saúde+</h1>
+            <p class="mt-2 text-xl text-slate-600">O seu assistente pessoal de saúde.</p>
+            <button id="enter-app-btn" class="mt-12 btn btn-primary max-w-xs mx-auto text-lg">
+                Entrar
+            </button>
+        </div>
+    </main>
+
+    <!-- Main App Content (Hidden by default) -->
+    <main id="main-app-content" class="hidden flex-grow container mx-auto p-4 flex flex-col items-center">
+        <!-- Menu Section -->
+        <div id="menu-section" class="w-full max-w-3xl">
+            <h1 class="text-4xl font-bold text-slate-800 text-center mb-2">Saúde+</h1>
+            <p class="text-center text-slate-500 mb-8 text-lg">Selecione uma opção para começar</p>
+            <p class="text-xs text-slate-500 text-center mb-6 truncate" id="user-id-display"></p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
+                <button id="goto-meds-btn" class="menu-card">
+                    <svg class="icon-meds" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 19.5v-8.25m18 0A2.25 2.25 0 0018.75 9H5.25A2.25 2.25 0 003 11.25m18 0v-7.5A2.25 2.25 0 0018.75 1.5H5.25A2.25 2.25 0 003 3.75v7.5m18 0h-6.25m-1.5-1.5-1.5 1.5-1.5-1.5-1.5 1.5-1.5-1.5-1.5 1.5M3 11.25h6.25" /></svg>
+                    <span>Medicamentos</span>
+                </button>
+                <button id="goto-habits-btn" class="menu-card">
+                    <svg class="icon-habits" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>
+                    <span>Hábitos</span>
+                </button>
+                <button id="goto-vitals-btn" class="menu-card">
+                     <svg class="icon-vitals" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>
+                    <span>Sinais Vitais</span>
+                </button>
+                <button id="goto-nutrition-btn" class="menu-card">
+                    <svg class="icon-nutrition" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 2.25a14.98 14.98 0 00-5.84 7.38m5.84 2.58a14.98 14.98 0 017.38-5.84m-7.38 5.84l-2.58-2.58m0 0l-2.58 2.58m2.58-2.58v-2.58m0 2.58h-2.58" /></svg>
+                    <span>Nutrição</span>
+                </button>
+                <button id="goto-appointments-btn" class="menu-card">
+                    <svg class="icon-appointments" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M12 12.75h.008v.008H12v-.008z" /></svg>
+                    <span>Consultas</span>
+                </button>
+                <button id="goto-sleep-btn" class="menu-card">
+                     <svg class="icon-sleep" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+                    <span>Sono</span>
+                </button>
+                 <button id="goto-emotional-support-btn" class="menu-card">
+                    <svg class="icon-emotional" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m12 5.25v-1.5m-12 0v-1.5m6-7.5l.75.75 1.5-1.5M3.375 6.168l1.5 1.5.75-.75" /></svg>
+                    <span>Apoio Emocional</span>
+                </button>
+                <button id="goto-professionals-btn" class="menu-card">
+                     <svg class="icon-professionals" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+                    <span>Outros (IA)</span>
+                </button>
+                <button id="goto-achievements-btn" class="menu-card">
+                    <svg class="icon-achievements" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9a9.75 9.75 0 100-13.5h9a9.75 9.75 0 000 13.5z" /><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6.375c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H9.375a1.125 1.125 0 01-1.125-1.125v-1.5c0-.621.504 1.125 1.125-1.125h1.125zM10.5 12.375c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125H9.375a1.125 1.125 0 01-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h1.125zM13.5 9.375c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125h-1.125a1.125 1.125 0 01-1.125-1.125v-1.5c0-.621.504-1.125 1.125-1.125h1.125z" /></svg>
+                    <span>Conquistas</span>
+                </button>
+                 <button id="goto-reports-btn" class="menu-card">
+                    <svg class="icon-reports" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                    <span>Relatórios</span>
+                </button>
+                <button id="goto-summary-btn" class="menu-card">
+                    <svg class="icon-summary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.572L16.5 21.75l-.398-1.178a3.375 3.375 0 00-2.456-2.456L12.5 17.25l1.178-.398a3.375 3.375 0 002.456-2.456L16.5 13.5l.398 1.178a3.375 3.375 0 002.456 2.456l1.178.398-1.178.398a3.375 3.375 0 00-2.456 2.456z" /></svg>
+                    <span>Resumo IA</span>
+                </button>
+                <button id="goto-news-btn" class="menu-card">
+                    <svg class="icon-news" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 18V7.125c0-.621.504-1.125 1.125-1.125H9.375m3 7.5H9.375m-3-9v12m12-12v12" /></svg>
+                    <span>Notícias</span>
+                </button>
+                <button id="goto-feedback-btn" class="menu-card">
+                    <svg class="icon-feedback" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.76 9.76 0 01-2.53-.375L3 21l1.625-3.625a9.763 9.763 0 01-1.375-3.125C3.25 12.007 3 12 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
+                    <span>Feedback</span>
+                </button>
+                 <button id="goto-profile-btn" class="menu-card">
+                    <svg class="icon-profile" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                    <span>Perfil</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- App Sections (Hidden by default) -->
+        <div id="app-sections" class="w-full max-w-2xl">
+            <!-- Profile Section -->
+            <div id="profile-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Perfil do Usuário</h1>
+                    
+                    <div class="flex justify-center mb-4">
+                        <div class="relative">
+                            <img id="profile-picture-preview" src="https://placehold.co/128x128/E2E8F0/475569?text=Foto" alt="Foto de Perfil" class="w-32 h-32 rounded-full object-cover border-4 border-slate-200">
+                            <button type="button" id="upload-picture-btn" class="absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-600 p-2 rounded-full text-white shadow-md transition-transform transform hover:scale-110">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <input type="file" id="profile-picture-input" class="hidden" accept="image/*">
+                        </div>
+                    </div>
+
+                    <form id="profile-form" class="flex flex-col space-y-4">
+                        <div>
+                            <label for="profile-name" class="form-label">Nome Completo</label>
+                            <input type="text" id="profile-name" class="form-input">
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <div>
+                                <label for="profile-dob" class="form-label">Data de Nascimento</label>
+                                <input type="date" id="profile-dob" class="form-input">
+                            </div>
+                            <div>
+                                <label for="profile-blood-type" class="form-label">Tipo Sanguíneo</label>
+                                <select id="profile-blood-type" class="form-select">
+                                    <option value="">Não sei</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="profile-phone" class="form-label">Telefone</label>
+                                <input type="tel" id="profile-phone" class="form-input" placeholder="(00) 00000-0000">
+                            </div>
+                             <div>
+                                <label for="profile-email" class="form-label">Email</label>
+                                <input type="email" id="profile-email" class="form-input" placeholder="seuemail@exemplo.com">
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <h2 class="text-lg font-semibold text-slate-700 pt-2">Contato de Emergência</h2>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <div>
+                                <label for="profile-emergency-name" class="form-label">Nome</label>
+                                <input type="text" id="profile-emergency-name" class="form-input">
+                            </div>
+                            <div>
+                                <label for="profile-emergency-phone" class="form-label">Telefone</label>
+                                <input type="tel" id="profile-emergency-phone" class="form-input">
+                            </div>
+                        </div>
+                         <hr class="my-2">
+                         <h2 class="text-lg font-semibold text-slate-700 pt-2">Informações Médicas</h2>
+                         <div>
+                            <label for="profile-allergies" class="form-label">Alergias</label>
+                            <textarea id="profile-allergies" rows="3" class="form-textarea" placeholder="Ex: Penicilina, camarão..."></textarea>
+                        </div>
+                        <div>
+                            <label for="profile-conditions" class="form-label">Condições Médicas</label>
+                            <textarea id="profile-conditions" rows="3" class="form-textarea" placeholder="Ex: Hipertensão, diabetes..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-4">Salvar Perfil</button>
+                    </form>
+                </div>
+            </div>
+            <!-- News Section -->
+            <div id="news-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Últimas Notícias da Saúde</h1>
+                    <div id="news-list" class="flex flex-col space-y-4">
+                        <!-- News Article 1 -->
+                        <div class="flex flex-col sm:flex-row items-center bg-slate-50 p-4 rounded-lg shadow-sm">
+                             <img src="https://placehold.co/100x100/A5B4FC/1E293B?text=Vacina" alt="Imagem de uma vacina" class="w-24 h-24 rounded-md object-cover mb-4 sm:mb-0 sm:mr-4">
+                             <div class="flex-1">
+                                 <h3 class="font-bold text-lg text-slate-800">Campanha de Vacinação contra a Gripe 2025</h3>
+                                 <p class="text-sm text-slate-600 mt-1">O Ministério da Saúde iniciou a distribuição de doses da vacina contra a gripe para a campanha de 2025, visando proteger os grupos prioritários antes do inverno.</p>
+                                 <a href="https://agenciabrasil.ebc.com.br/saude" target="_blank" class="text-blue-600 hover:underline text-sm font-semibold mt-2 inline-block">Leia mais &rarr;</a>
+                             </div>
+                        </div>
+                        <!-- News Article 2 -->
+                        <div class="flex flex-col sm:flex-row items-center bg-slate-50 p-4 rounded-lg shadow-sm">
+                             <img src="https://placehold.co/100x100/6EE7B7/1E293B?text=Calendário" alt="Imagem de um calendário" class="w-24 h-24 rounded-md object-cover mb-4 sm:mb-0 sm:mr-4">
+                             <div class="flex-1">
+                                 <h3 class="font-bold text-lg text-slate-800">Mudanças no Calendário de Vacinação 2025</h3>
+                                 <p class="text-sm text-slate-600 mt-1">O Calendário Nacional de Vacinação de 2025 inclui novas doses e alterações para vacinas como a da Pólio, Rotavírus, COVID-19 e a imunização contra o VSR para bebês.</p>
+                                 <a href="https://www.gov.br/saude/pt-br/assuntos/noticias" target="_blank" class="text-blue-600 hover:underline text-sm font-semibold mt-2 inline-block">Leia mais &rarr;</a>
+                             </div>
+                        </div>
+                        <!-- News Article 3 -->
+                        <div class="flex flex-col sm:flex-row items-center bg-slate-50 p-4 rounded-lg shadow-sm">
+                             <img src="https://placehold.co/100x100/F472B6/1E293B?text=Brasil" alt="Imagem do mapa do Brasil" class="w-24 h-24 rounded-md object-cover mb-4 sm:mb-0 sm:mr-4">
+                             <div class="flex-1">
+                                 <h3 class="font-bold text-lg text-slate-800">Brasil em destaque na luta contra meningites</h3>
+                                 <p class="text-sm text-slate-600 mt-1">O Brasil é pioneiro nas Américas ao traçar um plano nacional para a eliminação das meningites como problema de saúde pública até 2030, em parceria com a OPAS/OMS.</p>
+                                 <a href="https://www.gov.br/saude/pt-br/assuntos/noticias" target="_blank" class="text-blue-600 hover:underline text-sm font-semibold mt-2 inline-block">Leia mais &rarr;</a>
+                             </div>
+                        </div>
+                         <!-- News Article 4 -->
+                        <div class="flex flex-col sm:flex-row items-center bg-slate-50 p-4 rounded-lg shadow-sm">
+                             <img src="https://placehold.co/100x100/FBBF24/1E293B?text=Alerta" alt="Imagem de um sinal de alerta" class="w-24 h-24 rounded-md object-cover mb-4 sm:mb-0 sm:mr-4">
+                             <div class="flex-1">
+                                 <h3 class="font-bold text-lg text-slate-800">OMS alerta para surtos de doenças preveníveis</h3>
+                                 <p class="text-sm text-slate-600 mt-1">Surtos de doenças como sarampo e febre amarela estão aumentando globalmente, ameaçando o progresso da vacinação e a vida de milhões de pessoas.</p>
+                                 <a href="https://agenciabrasil.ebc.com.br/saude" target="_blank" class="text-blue-600 hover:underline text-sm font-semibold mt-2 inline-block">Leia mais &rarr;</a>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- AI Summary Section -->
+            <div id="summary-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">✨ Resumo da Semana</h1>
+                    <div id="summary-loading-spinner" class="flex justify-center py-8">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="summary-content" class="hidden prose prose-slate max-w-none text-slate-700">
+                        <!-- Gemini response goes here -->
+                    </div>
+                    <div id="summary-error" class="hidden text-center text-slate-500 py-8">
+                        <p>Não há dados suficientes na última semana para gerar um resumo.</p>
+                    </div>
+                    <button id="regenerate-summary-btn" class="btn btn-secondary !w-auto mx-auto px-6 hidden">Gerar Novo Resumo</button>
+                </div>
+            </div>
+
+            <!-- Nutrition Section -->
+            <div id="nutrition-section" class="hidden">
+                 <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                 <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Acompanhamento Nutricional</h1>
+                    <form id="nutrition-form" class="flex flex-col space-y-4 p-4 bg-slate-50 rounded-lg">
+                        <div class="relative w-full h-48 bg-slate-200 rounded-lg flex items-center justify-center hidden" id="image-preview-container">
+                            <img id="meal-image-preview" src="" alt="Pré-visualização da refeição" class="w-full h-full object-cover rounded-lg">
+                            <div id="image-loading-spinner" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg hidden">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                        <input type="text" id="meal-description" placeholder="Descrição da refeição" class="form-input" required>
+                        <input type="file" id="meal-image-input" class="hidden" accept="image/*">
+                        <button type="button" id="add-meal-photo-btn" class="btn btn-secondary !bg-slate-300 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
+                            ✨ Analisar Refeição por Foto
+                        </button>
+                        <button type="submit" class="btn bg-orange-500 text-white hover:bg-orange-600">Adicionar Refeição</button>
+                    </form>
+                    <div id="nutrition-list" class="flex flex-col space-y-3 mt-6"></div>
+                 </div>
+            </div>
+            
+            <div id="medication-section" class="hidden">
+                 <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                 <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Lembrete de Medicamentos</h1>
+                    <form id="medication-form" class="flex flex-col space-y-4 p-4 bg-slate-50 rounded-lg">
+                         <input type="text" id="medication-name" placeholder="Nome do Medicamento" class="form-input" required>
+                         <input type="time" id="medication-time" class="form-input" required>
+                         <button type="submit" class="btn btn-primary">Adicionar</button>
+                    </form>
+                    <div id="medications-list" class="flex flex-col space-y-3 mt-6"></div>
+                </div>
+            </div>
+            <div id="habits-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Monitor de Hábitos</h1>
+                    <form id="habit-form" class="flex flex-col space-y-4 p-4 bg-slate-50 rounded-lg">
+                        <input type="text" id="habit-name" placeholder="Ex: Caminhar 30 minutos" class="form-input" required>
+                        <button type="submit" class="btn bg-green-600 text-white hover:bg-green-700">Adicionar Hábito</button>
+                    </form>
+                    <div id="habits-list" class="flex flex-col space-y-3 mt-6"></div>
+                </div>
+            </div>
+            <div id="vitals-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Monitor de Sinais Vitais</h1>
+                     <form id="vitals-form" class="flex flex-col space-y-4 p-4 bg-slate-50 rounded-lg">
+                        <div class="flex space-x-4">
+                            <input type="number" id="systolic" placeholder="Sistólica (ex: 120)" class="form-input" required>
+                            <input type="number" id="diastolic" placeholder="Diastólica (ex: 80)" class="form-input" required>
+                        </div>
+                        <input type="number" id="heart-rate" placeholder="Frequência Cardíaca (BPM)" class="form-input" required>
+                        <input type="number" id="blood-glucose" placeholder="Glicemia (mg/dL)" class="form-input">
+                        <input type="number" id="oxygen-saturation" placeholder="Saturação de Oxigênio (%)" class="form-input">
+                        <button type="submit" class="btn bg-purple-600 text-white hover:bg-purple-700">Adicionar Leitura</button>
+                    </form>
+                    <div id="vitals-list" class="flex flex-col space-y-3 mt-6"></div>
+                </div>
+            </div>
+            <div id="appointments-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                 <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Agendamento de Consultas</h1>
+                    <form id="appointment-form" class="flex flex-col space-y-4 p-4 bg-slate-50 rounded-lg">
+                        <input type="text" id="appointment-description" placeholder="Descrição (ex: Consulta Dr. Silva)" class="form-input" required>
+                        <div class="flex space-x-4">
+                            <input type="date" id="appointment-date" class="form-input" required>
+                            <input type="time" id="appointment-time" class="form-input" required>
+                        </div>
+                        <button type="submit" class="btn bg-indigo-500 text-white hover:bg-indigo-600">Agendar Consulta</button>
+                    </form>
+                    <div id="appointments-list" class="flex flex-col space-y-3 mt-6"></div>
+                 </div>
+            </div>
+            <div id="sleep-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                 <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Monitor de Sono</h1>
+                    <form id="sleep-form" class="flex flex-col space-y-4 p-4 bg-slate-50 rounded-lg">
+                        <div class="flex flex-col">
+                            <label for="sleep-date" class="text-sm font-medium text-slate-600 mb-1">Data do Sono</label>
+                            <input type="date" id="sleep-date" class="form-input" required>
+                        </div>
+                        <div class="flex space-x-4">
+                           <input type="number" step="0.5" id="sleep-duration" placeholder="Duração (horas)" class="form-input" required>
+                           <select id="sleep-quality" class="form-input" required>
+                               <option value="">Qualidade</option>
+                               <option value="1">⭐</option>
+                               <option value="2">⭐⭐</option>
+                               <option value="3">⭐⭐⭐</option>
+                               <option value="4">⭐⭐⭐⭐</option>
+                               <option value="5">⭐⭐⭐⭐⭐</option>
+                           </select>
+                        </div>
+                        <button type="submit" class="btn bg-slate-500 text-white hover:bg-slate-600">Adicionar Sono</button>
+                    </form>
+                    <div id="sleep-list" class="flex flex-col space-y-3 mt-6"></div>
+                 </div>
+            </div>
+            <div id="professionals-section" class="hidden">
+                 <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                 <div class="card space-y-4">
+                     <h1 class="text-2xl font-bold text-slate-800 text-center">Fale com um Profissional (IA)</h1>
+                     <p class="text-sm text-center text-slate-500">Obtenha informações rápidas. Lembre-se, isso não substitui uma consulta real.</p>
+                     <button data-professional="medico" class="professional-btn menu-card !flex-row !justify-start text-rose-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-8 w-8 mr-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>
+                        <span>Médico</span>
+                     </button>
+                     <button data-professional="nutricionista" class="professional-btn menu-card !flex-row !justify-start text-orange-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-8 w-8 mr-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 2.25a14.98 14.98 0 00-5.84 7.38m5.84 2.58a14.98 14.98 0 017.38-5.84m-7.38 5.84l-2.58-2.58m0 0l-2.58 2.58m2.58-2.58v-2.58m0 2.58h-2.58" /></svg>
+                        <span>Nutricionista</span>
+                     </button>
+                     <button data-professional="psicologo" class="professional-btn menu-card !flex-row !justify-start text-cyan-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-8 w-8 mr-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        <span>Psicólogo</span>
+                     </button>
+                 </div>
+            </div>
+            <div id="chat-section" class="hidden">
+                 <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar</button>
+                 <div class="card !p-0 h-[75vh]">
+                    <div id="chat-header" class="p-4 border-b border-slate-200">
+                        <h2 class="text-xl font-bold text-slate-800 text-center">Conversa</h2>
+                    </div>
+                    <div id="chat-messages" class="flex-1 p-4 flex flex-col space-y-4 overflow-y-auto"></div>
+                    <form id="chat-form" class="p-4 border-t border-slate-200 flex space-x-2">
+                        <input type="text" id="chat-input" placeholder="Digite sua mensagem..." class="form-input flex-1" required>
+                        <button type="submit" class="btn btn-primary !w-auto px-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                        </button>
+                    </form>
+                 </div>
+            </div>
+            <div id="achievements-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                <div class="card">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center mb-6">Minhas Conquistas</h1>
+                    <div id="achievements-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <!-- Achievements will be rendered here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Feedback Section -->
+            <div id="feedback-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Deixe seu Feedback</h1>
+                    <p class="text-center text-slate-500">Sua opinião é muito importante para melhorarmos o Saúde+.</p>
+                    <form id="feedback-form" class="flex flex-col space-y-4 p-4 bg-slate-50 rounded-lg">
+                        <textarea id="feedback-text" rows="5" placeholder="Digite sua mensagem aqui..." class="form-input" required></textarea>
+                        <button type="submit" class="btn btn-primary">Enviar Feedback</button>
+                    </form>
+                </div>
+            </div>
+            <div id="reports-section" class="hidden">
+                <button class="back-to-menu-btn mb-4 text-blue-600 font-semibold flex items-center">&lt; Voltar ao Menu</button>
+                <div class="card space-y-6">
+                    <h1 class="text-2xl font-bold text-slate-800 text-center">Gerar Relatório de Saúde</h1>
+                    <div class="flex flex-col space-y-4 p-4 bg-slate-50 rounded-lg">
+                        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                             <input type="date" id="report-start-date" class="form-input" required>
+                             <input type="date" id="report-end-date" class="form-input" required>
+                        </div>
+                        <button id="generate-report-btn" class="btn bg-teal-600 text-white hover:bg-teal-700">Gerar e Imprimir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Modal -->
+        <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full relative">
+                <button id="close-modal-btn" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                <h3 id="modal-title" class="text-xl font-bold text-slate-800 mb-2"></h3>
+                <p id="modal-message" class="text-slate-600 mb-4"></p>
+                <button id="modal-ok-button" class="btn btn-primary w-auto px-6 py-2 ml-auto block">OK</button>
+            </div>
+        </div>
+        
+        <!-- Printable Report Area -->
+        <div id="print-area" class="hidden"></div>
+    </main>
+    
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, collection, query, addDoc, deleteDoc, updateDoc, where, serverTimestamp, setDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        setLogLevel('debug');
+
+        // --- Variáveis Globais ---
+        let db, auth, userId, isAuthReady = false;
+        let appId = 'default-app-id';
+        const allData = { meds: [], habits: [], vitals: [], nutrition: [], appointments: [], sleep: [], achievements: [], profile: {} };
+        
+        let activeChatContext = null;
+        let chatHistory = [];
+        let onModalOk = null;
+
+        const chatContexts = {
+            medico: {
+                title: "Médico (IA)",
+                systemPrompt: "Você é um assistente médico de IA. Seja objetivo e conciso. Forneça informações gerais e claras sobre saúde em respostas curtas. Lembre o usuário que você não é um médico de verdade e que deve sempre consultar um profissional para diagnósticos."
+            },
+            nutricionista: {
+                title: "Nutricionista (IA)",
+                systemPrompt: "Você é um nutricionista de IA. Seja objetivo e direto. Dê dicas gerais sobre alimentação saudável em textos curtos. Lembre o usuário que você não substitui um nutricionista real."
+            },
+            psicologo: {
+                title: "Psicólogo (IA)",
+                systemPrompt: "Você é um psicólogo de IA. Ofereça informações gerais sobre saúde mental de forma concisa. Lembre o usuário que você é uma IA e que para terapia é essencial consultar um profissional."
+            },
+            apoio_emocional: {
+                title: "Seu Espaço de Apoio Emocional",
+                systemPrompt: "Você é uma IA de apoio emocional chamada 'Saúde+'. Seu tom é calmo e empático. Ofereça um espaço seguro para o usuário desabafar, mas mantenha as respostas breves e objetivas. Forneça dicas gerais de bem-estar de forma sucinta. NUNCA forneça diagnósticos. Incentive o usuário a procurar um profissional de saúde mental. Lembre sempre que você é uma IA."
+            }
+        };
+        
+        const achievementsList = { /* ... */ };
+
+        // --- Seletores de DOM ---
+        const imagePreviewContainer = document.getElementById('image-preview-container'), mealImagePreview = document.getElementById('meal-image-preview'), imageLoadingSpinner = document.getElementById('image-loading-spinner'), mealImageInput = document.getElementById('meal-image-input'), addMealPhotoBtn = document.getElementById('add-meal-photo-btn'), mealDescriptionInput = document.getElementById('meal-description'), achievementsGrid = document.getElementById('achievements-grid'), reportStartDate = document.getElementById('report-start-date'), reportEndDate = document.getElementById('report-end-date'), generateReportBtn = document.getElementById('generate-report-btn'), printArea = document.getElementById('print-area'), splashScreen = document.getElementById('splash-screen'), mainAppContent = document.getElementById('main-app-content'), enterAppBtn = document.getElementById('enter-app-btn'), menuSection = document.getElementById('menu-section'), appSectionsContainer = document.getElementById('app-sections'), allSections = appSectionsContainer.querySelectorAll(':scope > div'), userIdDisplay = document.getElementById('user-id-display'), formMedication = document.getElementById('medication-form'), medicationsList = document.getElementById('medications-list'), formHabit = document.getElementById('habit-form'), habitsList = document.getElementById('habits-list'), formVitals = document.getElementById('vitals-form'), vitalsList = document.getElementById('vitals-list'), formNutrition = document.getElementById('nutrition-form'), nutritionList = document.getElementById('nutrition-list'), formAppointment = document.getElementById('appointment-form'), appointmentsList = document.getElementById('appointments-list'), formSleep = document.getElementById('sleep-form'), sleepList = document.getElementById('sleep-list'), formFeedback = document.getElementById('feedback-form'), formProfile = document.getElementById('profile-form'), chatHeader = document.getElementById('chat-header').querySelector('h2'), chatMessages = document.getElementById('chat-messages'), chatForm = document.getElementById('chat-form'), chatInput = document.getElementById('chat-input'), modal = document.getElementById('message-modal'), modalTitle = document.getElementById('modal-title'), modalMessage = document.getElementById('modal-message'), modalOkButton = document.getElementById('modal-ok-button'), closeModalBtn = document.getElementById('close-modal-btn'), summaryLoadingSpinner = document.getElementById('summary-loading-spinner'), summaryContent = document.getElementById('summary-content'), summaryError = document.getElementById('summary-error'), regenerateSummaryBtn = document.getElementById('regenerate-summary-btn'), profilePicturePreview = document.getElementById('profile-picture-preview'), uploadPictureBtn = document.getElementById('upload-picture-btn'), profilePictureInput = document.getElementById('profile-picture-input');
+
+        // --- Funções de Navegação e Renderização ---
+        const showSection = (sectionId) => {menuSection.classList.add('hidden'); allSections.forEach(s => s.classList.add('hidden')); const targetSection = document.getElementById(sectionId); if (targetSection) { targetSection.classList.remove('hidden'); switch(sectionId) { case 'medication-section': renderMedications(allData.meds); break; case 'habits-section': renderHabits(allData.habits); break; case 'vitals-section': renderVitals(allData.vitals); break; case 'nutrition-section': renderNutrition(allData.nutrition); break; case 'appointments-section': renderAppointments(allData.appointments); break; case 'sleep-section': renderSleep(allData.sleep); break; case 'achievements-section': renderAchievements(); break; case 'profile-section': populateProfileForm(allData.profile); break;} } };
+        const showMenu = () => { menuSection.classList.remove('hidden'); allSections.forEach(s => s.classList.add('hidden')); activeChatContext = null; };
+        const createDeleteItem = (item, contentHTML, deleteHandler) => {const el = document.createElement('div'); el.className = 'flex items-center justify-between p-3 bg-slate-100 rounded-lg'; const content = document.createElement('div'); content.innerHTML = contentHTML; const deleteButton = document.createElement('button'); deleteButton.innerHTML = '&times;'; deleteButton.className = 'text-red-500 hover:text-red-700 text-2xl font-bold ml-4'; deleteButton.onclick = () => deleteHandler(item.id); el.appendChild(content); el.appendChild(deleteButton); return el;};
+        const renderList = (element, items, renderItemFunc, emptyText, sortFunc) => {element.innerHTML = ''; if (items.length === 0) {element.innerHTML = `<p class="text-center text-slate-500">${emptyText}</p>`; return;} if (sortFunc) items.sort(sortFunc); items.forEach(item => element.appendChild(renderItemFunc(item)));};
+        const renderMedications = (meds) => renderList(medicationsList, meds, (med) => createDeleteItem(med, `<div><span class="font-bold text-slate-800">${med.name}</span><span class="text-sm text-slate-500 ml-2">${med.time}</span></div>`, (id) => deleteDoc(doc(db, `/artifacts/${appId}/users/${userId}/medicamentos`, id))), 'Nenhum medicamento adicionado.', (a, b) => a.time.localeCompare(b.time));
+        const renderHabits = (habits) => { habitsList.innerHTML = ''; if (habits.length === 0) { habitsList.innerHTML = '<p class="text-center text-slate-500">Nenhum hábito adicionado.</p>'; return; } const todayStr = new Date().toISOString().split('T')[0]; habits.forEach(habit => { const isDoneToday = habit.completedDays?.includes(todayStr); const item = document.createElement('div'); item.className = `flex items-center justify-between p-3 rounded-lg ${isDoneToday ? 'bg-green-100' : 'bg-slate-100'}`; item.innerHTML = ` <span class="font-bold text-slate-800 ${isDoneToday ? 'line-through' : ''}">${habit.name}</span> <div class="flex items-center"> <input type="checkbox" data-id="${habit.id}" class="habit-checkbox h-5 w-5 mr-4" ${isDoneToday ? 'checked' : ''}> <button data-id="${habit.id}" class="delete-habit-btn text-red-500 hover:text-red-700">&times;</button> </div> `; habitsList.appendChild(item); }); document.querySelectorAll('.delete-habit-btn').forEach(btn => btn.onclick = async (e) => deleteDoc(doc(db, `/artifacts/${appId}/users/${userId}/habitos`, e.target.dataset.id))); document.querySelectorAll('.habit-checkbox').forEach(box => box.onchange = async (e) => { const docId = e.target.dataset.id; const habit = allData.habits.find(h => h.id === docId); let completed = habit.completedDays || []; if (e.target.checked) { if (!completed.includes(todayStr)) completed.push(todayStr); } else { completed = completed.filter(day => day !== todayStr); } await updateDoc(doc(db, `/artifacts/${appId}/users/${userId}/habitos`, docId), { completedDays: completed }); checkAchievements(); }); };
+        const renderVitals = (vitals) => renderList(vitalsList, vitals,(vital) => createDeleteItem(vital, `<div><p class="font-bold text-slate-800">P.A: ${vital.systolic}/${vital.diastolic} mmHg | F.C: ${vital.heartRate} BPM${vital.bloodGlucose ? ` | Glicemia: ${vital.bloodGlucose} mg/dL` : ''}${vital.oxygenSaturation ? ` | Sat: ${vital.oxygenSaturation}%` : ''}</p><p class="text-xs text-slate-500">${new Date(vital.createdAt.seconds * 1000).toLocaleString()}</p></div>`,(id) => deleteDoc(doc(db, `/artifacts/${appId}/users/${userId}/sinais_vitais`, id))),'Nenhum sinal vital registado.', (a, b) => b.createdAt.seconds - a.createdAt.seconds);
+        const renderNutrition = (meals) => renderList(nutritionList, meals, (meal) => createDeleteItem(meal, `<div><p class="font-bold text-slate-800">${meal.description}</p><p class="text-xs text-slate-500">${new Date(meal.createdAt.seconds * 1000).toLocaleString()}</p></div>`,(id) => deleteDoc(doc(db, `/artifacts/${appId}/users/${userId}/dieta`, id))),'Nenhuma refeição adicionada.', (a, b) => b.createdAt.seconds - a.createdAt.seconds);
+        const renderAppointments = (apps) => renderList(appointmentsList, apps, (app) => createDeleteItem(app, `<div><p class="font-bold text-slate-800">${app.description}</p><p class="text-xs text-slate-500">${new Date(app.date).toLocaleDateString()} às ${app.time}</p></div>`,(id) => deleteDoc(doc(db, `/artifacts/${appId}/users/${userId}/agendamentos`, id))),'Nenhuma consulta agendada.', (a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+        const renderSleep = (sleeps) => renderList(sleepList, sleeps,(sleep) => createDeleteItem(sleep, `<div><p class="font-bold text-slate-800">${sleep.duration} horas | Qualidade: ${'⭐'.repeat(sleep.quality)}</p><p class="text-xs text-slate-500">${new Date(sleep.date).toLocaleDateString()}</p></div>`,(id) => deleteDoc(doc(db, `/artifacts/${appId}/users/${userId}/sono`, id))),'Nenhum registro de sono.', (a, b) => new Date(b.date) - new Date(a.date));
+        const renderAchievements = () => { /* ... */ };
+        const populateProfileForm = (profile = {}) => {
+            profilePicturePreview.src = profile.photoBase64 || 'https://placehold.co/128x128/E2E8F0/475569?text=Foto';
+            profilePicturePreview.removeAttribute('data-new-image');
+
+            formProfile.elements['profile-name'].value = profile.name || '';
+            formProfile.elements['profile-dob'].value = profile.dob || '';
+            formProfile.elements['profile-blood-type'].value = profile.bloodType || '';
+            formProfile.elements['profile-phone'].value = profile.phone || '';
+            formProfile.elements['profile-email'].value = profile.email || '';
+            formProfile.elements['profile-emergency-name'].value = profile.emergencyName || '';
+            formProfile.elements['profile-emergency-phone'].value = profile.emergencyPhone || '';
+            formProfile.elements['profile-allergies'].value = profile.allergies || '';
+            formProfile.elements['profile-conditions'].value = profile.conditions || '';
+        };
+        const showModal = (title, message, callback) => {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            onModalOk = callback || null;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        // --- Inicialização ---
+        window.onload = async () => { try { appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; const firebaseConfig = JSON.parse(__firebase_config); const app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app); onAuthStateChanged(auth, (user) => { if (user) { userId = user.uid; isAuthReady = true; userIdDisplay.textContent = `ID do Utilizador: ${userId}`; setupAllListeners(userId); } }); if (typeof __initial_auth_token !== 'undefined') { await signInWithCustomToken(auth, __initial_auth_token); } else { await signInAnonymously(auth); } } catch (error) { console.error("Erro na inicialização do Firebase:", error); showModal("Erro de Conexão", "Não foi possível conectar à base de dados. Por favor, atualize a página."); } };
+        const setupAllListeners = (uid) => {
+            const collections = {'medicamentos': 'meds', 'habitos': 'habits', 'sinais_vitais': 'vitals', 'dieta': 'nutrition', 'agendamentos': 'appointments', 'sono': 'sleep', 'conquistas': 'achievements' };
+            for (const [colName, dataKey] of Object.entries(collections)) {
+                const q = query(collection(db, `/artifacts/${appId}/users/${uid}/${colName}`));
+                onSnapshot(q, (snapshot) => {
+                    allData[dataKey] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    const activeSection = document.querySelector('#app-sections > div:not(.hidden)');
+                    if (activeSection) showSection(activeSection.id);
+                    checkAchievements();
+                }, (error) => console.error(`Erro ao ouvir ${colName}: `, error));
+            }
+             const profileDocRef = doc(db, `/artifacts/${appId}/users/${uid}/perfil`, 'main');
+            onSnapshot(profileDocRef, (docSnap) => {
+                allData.profile = docSnap.exists() ? docSnap.data() : {};
+                if (document.getElementById('profile-section').offsetParent !== null) {
+                    populateProfileForm(allData.profile);
+                }
+            }, (error) => console.error("Erro ao ouvir perfil:", error));
+        };
+
+        // --- Gemini API Calls ---
+        const callGeminiAPI = async (prompt, systemInstruction = null) => { const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`; const payload = { contents: [{ parts: [{ text: prompt }] }], }; if (systemInstruction) { payload.systemInstruction = { parts: [{ text: systemInstruction }] }; } const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) throw new Error(`API error: ${response.statusText}`); const result = await response.json(); return result.candidates[0].content.parts[0].text; };
+        const analyzeImageWithGemini = async (base64ImageData) => { /* ... */ };
+
+        // --- Funções de Chat ---
+        const setupChat = async (contextId) => { activeChatContext = contextId; const context = chatContexts[contextId]; if (!context) return; chatHeader.textContent = context.title; chatMessages.innerHTML = ''; chatHistory = []; showSection('chat-section'); const chatDocRef = doc(db, `/artifacts/${appId}/users/${userId}/conversations`, activeChatContext); const docSnap = await getDoc(chatDocRef); if (docSnap.exists()) { chatHistory = docSnap.data().messages || []; chatHistory.forEach(msg => renderChatMessage(msg.text, msg.sender === 'user' ? 'user' : 'ai')); } else { const introMessage = "Olá! Eu sou a IA de apoio do Saúde+. Estou aqui para conversar e oferecer algumas dicas de bem-estar. Como você está se sentindo hoje? Lembre-se, não sou um profissional de saúde, mas sou um bom ouvinte."; renderChatMessage(introMessage, 'ai'); chatHistory.push({ role: 'model', parts: [{ text: introMessage }]}); } };
+        const renderChatMessage = (text, sender) => { const bubble = document.createElement('div'); bubble.className = `chat-bubble ${sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-ai'}`; bubble.textContent = text; chatMessages.appendChild(bubble); chatMessages.scrollTop = chatMessages.scrollHeight; };
+
+        // --- Funções Principais ---
+        const generateWeeklySummary = async () => { /* ... */ };
+        const unlockAchievement = async (id) => { /* ... */ };
+        const checkAchievements = () => { /* ... */ };
+        const generateReport = () => { /* ... */ };
+
+        // --- Event Listeners ---
+        enterAppBtn.addEventListener('click', () => { splashScreen.classList.add('hidden'); mainAppContent.classList.remove('hidden'); showMenu(); });
+        document.getElementById('goto-meds-btn').addEventListener('click', () => showSection('medication-section'));
+        document.getElementById('goto-habits-btn').addEventListener('click', () => showSection('habits-section'));
+        document.getElementById('goto-vitals-btn').addEventListener('click', () => showSection('vitals-section'));
+        document.getElementById('goto-nutrition-btn').addEventListener('click', () => showSection('nutrition-section'));
+        document.getElementById('goto-appointments-btn').addEventListener('click', () => showSection('appointments-section'));
+        document.getElementById('goto-sleep-btn').addEventListener('click', () => showSection('sleep-section'));
+        document.getElementById('goto-professionals-btn').addEventListener('click', () => showSection('professionals-section'));
+        document.getElementById('goto-achievements-btn').addEventListener('click', () => showSection('achievements-section'));
+        document.getElementById('goto-reports-btn').addEventListener('click', () => showSection('reports-section'));
+        document.getElementById('goto-summary-btn').addEventListener('click', () => { showSection('summary-section'); generateWeeklySummary(); });
+        document.getElementById('goto-emotional-support-btn').addEventListener('click', () => setupChat('apoio_emocional'));
+        document.getElementById('goto-feedback-btn').addEventListener('click', () => showSection('feedback-section'));
+        document.getElementById('goto-news-btn').addEventListener('click', () => showSection('news-section'));
+        document.getElementById('goto-profile-btn').addEventListener('click', () => showSection('profile-section'));
+        regenerateSummaryBtn.addEventListener('click', generateWeeklySummary);
+        generateReportBtn.addEventListener('click', generateReport);
+        document.querySelectorAll('.professional-btn').forEach(btn => btn.addEventListener('click', (e) => setupChat(e.currentTarget.dataset.professional)));
+        document.querySelectorAll('.back-to-menu-btn').forEach(btn => btn.addEventListener('click', showMenu));
+        document.getElementById('back-to-professionals-btn')?.addEventListener('click', () => showSection('professionals-section'));
+        modalOkButton.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            if (onModalOk) {
+                onModalOk();
+                onModalOk = null; // Reset callback
+            }
+        });
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            onModalOk = null; // Also reset on closing
+        });
+        const handleFormSubmit = async (e, collectionName, data) => { e.preventDefault(); if (isAuthReady) { const docRef = collection(db, `/artifacts/${appId}/users/${userId}/${collectionName}`); await addDoc(docRef, { ...data, userId, createdAt: serverTimestamp() }); e.target.reset(); checkAchievements(); } };
+        formMedication.addEventListener('submit', (e) => handleFormSubmit(e, 'medicamentos', { name: e.target.elements['medication-name'].value, time: e.target.elements['medication-time'].value }));
+        formHabit.addEventListener('submit', (e) => handleFormSubmit(e, 'habitos', { name: e.target.elements['habit-name'].value, completedDays: [] }));
+        formVitals.addEventListener('submit', (e) => {
+            const data = {
+                systolic: Number(e.target.elements.systolic.value),
+                diastolic: Number(e.target.elements.diastolic.value),
+                heartRate: Number(e.target.elements['heart-rate'].value)
+            };
+            const bloodGlucoseValue = e.target.elements['blood-glucose'].value;
+            if (bloodGlucoseValue) {
+                data.bloodGlucose = Number(bloodGlucoseValue);
+            }
+            const oxygenSaturationValue = e.target.elements['oxygen-saturation'].value;
+            if (oxygenSaturationValue) {
+                data.oxygenSaturation = Number(oxygenSaturationValue);
+            }
+            handleFormSubmit(e, 'sinais_vitais', data);
+        });
+        uploadPictureBtn.addEventListener('click', () => profilePictureInput.click());
+        profilePictureInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 256;
+                    const MAX_HEIGHT = 256;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                    profilePicturePreview.src = dataUrl;
+                    profilePicturePreview.dataset.newImage = dataUrl;
+                };
+            };
+            reader.readAsDataURL(file);
+        });
+        formProfile.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!isAuthReady) return;
+            const profileData = {
+                name: e.target.elements['profile-name'].value,
+                dob: e.target.elements['profile-dob'].value,
+                bloodType: e.target.elements['profile-blood-type'].value,
+                phone: e.target.elements['profile-phone'].value,
+                email: e.target.elements['profile-email'].value,
+                emergencyName: e.target.elements['profile-emergency-name'].value,
+                emergencyPhone: e.target.elements['profile-emergency-phone'].value,
+                allergies: e.target.elements['profile-allergies'].value,
+                conditions: e.target.elements['profile-conditions'].value,
+            };
+            if (profilePicturePreview.dataset.newImage) {
+                profileData.photoBase64 = profilePicturePreview.dataset.newImage;
+            }
+            const profileDocRef = doc(db, `/artifacts/${appId}/users/${userId}/perfil`, 'main');
+            try {
+                await setDoc(profileDocRef, profileData, { merge: true });
+                profilePicturePreview.removeAttribute('data-new-image');
+                showModal("Sucesso!", "Seu perfil foi salvo com sucesso.");
+            } catch (error) {
+                console.error("Erro ao salvar o perfil:", error);
+                showModal("Erro", "Não foi possível salvar seu perfil. Por favor, tente novamente.");
+            }
+        });
+        formNutrition.addEventListener('submit', (e) => { handleFormSubmit(e, 'dieta', { description: e.target.elements['meal-description'].value }); imagePreviewContainer.classList.add('hidden'); mealImagePreview.setAttribute('src', ''); });
+        formAppointment.addEventListener('submit', (e) => handleFormSubmit(e, 'agendamentos', { description: e.target.elements['appointment-description'].value, date: e.target.elements['appointment-date'].value, time: e.target.elements['appointment-time'].value }));
+        formSleep.addEventListener('submit', (e) => handleFormSubmit(e, 'sono', { date: e.target.elements['sleep-date'].value, duration: Number(e.target.elements['sleep-duration'].value), quality: Number(e.target.elements['sleep-quality'].value) }));
+        formFeedback.addEventListener('submit', (e) => {
+            const feedbackText = e.target.elements['feedback-text'].value.trim();
+            if (!feedbackText) {
+                e.preventDefault();
+                showModal("Campo Vazio", "Por favor, escreva seu feedback antes de enviar.");
+                return;
+            }
+            handleFormSubmit(e, 'feedback', { text: feedbackText });
+            showModal("Feedback Enviado", "Muito obrigado pela sua contribuição!", showMenu);
+        });
+        addMealPhotoBtn.addEventListener('click', () => mealImageInput.click());
+        mealImageInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (event) => { imagePreviewContainer.classList.remove('hidden'); mealImagePreview.src = event.target.result; const base64Data = event.target.result.split(',')[1]; analyzeImageWithGemini(base64Data); }; reader.readAsDataURL(file); });
+        
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = chatInput.value.trim();
+            if (!messageText || !activeChatContext) return;
+            
+            const userMessage = { role: 'user', parts: [{ text: messageText }] };
+            renderChatMessage(messageText, 'user');
+            chatHistory.push(userMessage);
+            chatForm.reset();
+
+            const context = chatContexts[activeChatContext];
+            
+            try {
+                const responseText = await callGeminiAPI(JSON.stringify(chatHistory), context.systemPrompt);
+                const aiMessage = { role: 'model', parts: [{ text: responseText }]};
+                renderChatMessage(responseText, 'ai');
+                chatHistory.push(aiMessage);
+
+                // Save conversation
+                const chatDocRef = doc(db, `/artifacts/${appId}/users/${userId}/conversations`, activeChatContext);
+                await setDoc(chatDocRef, { messages: chatHistory });
+
+            } catch(error) {
+                console.error("Error calling Gemini:", error);
+                renderChatMessage("Desculpe, ocorreu um erro ao conectar com a IA. Tente novamente.", 'ai');
+            }
+        });
+    </script>
+</body>
+</html>
+
